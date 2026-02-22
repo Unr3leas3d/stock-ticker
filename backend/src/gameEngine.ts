@@ -298,17 +298,21 @@ export class GameEngine {
             }
 
         } else if (action === 'DIVIDEND') {
-            this.setPhase('PAYING_DIVIDENDS');
-            // Pay out players who own this stock (e.g., matching the current value per share, or fixed amount)
-            const payoutPerShare = amount;
-            Object.values(this.state.players).forEach(p => {
-                const sharesOwned = p.portfolio[stock];
-                if (sharesOwned > 0) {
-                    const payout = sharesOwned * payoutPerShare;
-                    p.cash += payout;
-                    this.addLog(`${p.name} earned $${payout.toFixed(2)} in dividends from ${stock}.`);
-                }
-            });
+            if (this.state.market[stock].currentValue >= 1.00) {
+                this.setPhase('PAYING_DIVIDENDS');
+                // Pay out players who own this stock (e.g., matching the current value per share, or fixed amount)
+                const payoutPerShare = amount;
+                Object.values(this.state.players).forEach(p => {
+                    const sharesOwned = p.portfolio[stock];
+                    if (sharesOwned > 0) {
+                        const payout = sharesOwned * payoutPerShare;
+                        p.cash += payout;
+                        this.addLog(`${p.name} earned $${payout.toFixed(2)} in dividends from ${stock}.`);
+                    }
+                });
+            } else {
+                this.addLog(`${stock} did not pay dividends because its value is below $1.00.`);
+            }
         }
 
         this.advanceTurn();

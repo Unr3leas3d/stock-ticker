@@ -194,9 +194,10 @@ export default function LobbyPage() {
                                             <div className="space-y-1.5">
                                                 <Label className="text-[10px] font-black uppercase text-slate-500">Initial Cash</Label>
                                                 <Input
+                                                    key={`cash-${gameState.settings.initialCash}`}
                                                     type="number"
-                                                    value={gameState.settings.initialCash}
-                                                    onChange={(e) => actions.updateSettings({ initialCash: Number(e.target.value) })}
+                                                    defaultValue={gameState.settings.initialCash}
+                                                    onBlur={(e) => actions.updateSettings({ initialCash: Number(e.target.value) })}
                                                     disabled={!isHost}
                                                     className="h-9 font-bold bg-white"
                                                 />
@@ -204,9 +205,10 @@ export default function LobbyPage() {
                                             <div className="space-y-1.5">
                                                 <Label className="text-[10px] font-black uppercase text-slate-500">Max Rounds</Label>
                                                 <Input
+                                                    key={`rounds-${gameState.settings.maxRounds}`}
                                                     type="number"
-                                                    value={gameState.settings.maxRounds}
-                                                    onChange={(e) => actions.updateSettings({ maxRounds: Number(e.target.value) })}
+                                                    defaultValue={gameState.settings.maxRounds}
+                                                    onBlur={(e) => actions.updateSettings({ maxRounds: Number(e.target.value) })}
                                                     disabled={!isHost}
                                                     className="h-9 font-bold bg-white"
                                                 />

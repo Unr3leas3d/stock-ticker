@@ -60,7 +60,13 @@ const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 setInterval(() => {
     const now = Date.now();
     for (const [roomId, engine] of rooms.entries()) {
-        if (now - engine.getState().lastActivityAt > INACTIVITY_TIMEOUT) {
+        const state = engine.getState();
+        if (state.currentPhase === 'END_GAME' && now - state.lastActivityAt > 5 * 60 * 1000) {
+            console.log(`🧹 Purging finished game room: ${roomId}`);
+            io.to(roomId).emit('TICKER_LOG', 'Game results expired. Room closed.');
+            io.in(roomId).disconnectSockets(true);
+            rooms.delete(roomId);
+        } else if (now - state.lastActivityAt > INACTIVITY_TIMEOUT) {
             console.log(`🧹 Purging inactive room: ${roomId}`);
             io.to(roomId).emit('TICKER_LOG', 'Room closed due to 30 minutes of inactivity.');
             io.in(roomId).disconnectSockets(true);
