@@ -303,7 +303,7 @@ export class GameEngine {
             }
 
         } else if (action === 'DIVIDEND') {
-            if (this.state.market[stock].currentValue >= 1.00) {
+            if (this.state.market[stock].currentValue > 1.00) {
                 this.setPhase('PAYING_DIVIDENDS');
                 // Pay out players who own this stock (e.g., matching the current value per share, or fixed amount)
                 const payoutPerShare = amount;
@@ -316,7 +316,7 @@ export class GameEngine {
                     }
                 });
             } else {
-                this.addLog(`${stock} did not pay dividends because its value is below $1.00.`);
+                this.addLog(`${stock} did not pay dividends because its value is not greater than $1.00.`);
             }
         }
 
