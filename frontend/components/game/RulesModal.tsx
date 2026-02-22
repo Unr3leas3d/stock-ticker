@@ -42,8 +42,8 @@ export function RulesModal() {
                     </DialogHeader>
                 </div>
 
-                <ScrollArea className="flex-1 p-6 dark:bg-slate-900 bg-white">
-                    <div className="space-y-8 pb-4">
+                <ScrollArea className="flex-1 dark:bg-slate-900 bg-white min-h-0">
+                    <div className="p-6 space-y-8 pb-4">
                         {/* Section: Objective */}
                         <section className="space-y-3">
                             <div className="flex items-center gap-2">
