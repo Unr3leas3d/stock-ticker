@@ -52,12 +52,17 @@ export class GameEngine {
             settings,
             market: createInitialMarket(),
             players: {},
-            tickerLog: [`Game Created in room ${roomId}. Waiting for players...`]
+            tickerLog: [`Game Created in room ${roomId}. Waiting for players...`],
+            lastActivityAt: Date.now()
         };
     }
 
     public getState(): GameState {
         return this.state;
+    }
+
+    public markActivity() {
+        this.state.lastActivityAt = Date.now();
     }
 
     private addLog(msg: string) {

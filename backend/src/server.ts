@@ -54,8 +54,33 @@ const getRoom = (roomId: string): GameEngine => {
     return engine;
 };
 
+// --- Inactivity Cleanup ---
+const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+
+setInterval(() => {
+    const now = Date.now();
+    for (const [roomId, engine] of rooms.entries()) {
+        if (now - engine.getState().lastActivityAt > INACTIVITY_TIMEOUT) {
+            console.log(`🧹 Purging inactive room: ${roomId}`);
+            io.to(roomId).emit('TICKER_LOG', 'Room closed due to 30 minutes of inactivity.');
+            io.in(roomId).disconnectSockets(true);
+            rooms.delete(roomId);
+        }
+    }
+}, 5 * 60 * 1000); // Run check every 5 minutes
+
 io.on('connection', (socket: Socket) => {
     console.log(`Client connected: ${socket.id}`);
+
+    // Update room activity on any client event
+    socket.use(([event, ...args], next) => {
+        const roomId = socketToRoom.get(socket.id);
+        if (roomId) {
+            const engine = rooms.get(roomId);
+            if (engine) engine.markActivity();
+        }
+        next();
+    });
 
     // --- Client -> Server Event Listeners ---
 
