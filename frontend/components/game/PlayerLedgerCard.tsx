@@ -23,7 +23,7 @@ interface PlayerLedgerCardProps {
 export function PlayerLedgerCard({ player, market, onRequestLoan }: PlayerLedgerCardProps) {
     const loanDisabled = player.hasUsedLoan || player.isReady;
     return (
-        <Card className="flex flex-col">
+        <Card className="flex flex-col min-h-[50vh]">
             <CardHeader className="pb-2">
                 <div className="flex items-center justify-between gap-4">
                     <div>

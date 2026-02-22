@@ -32,7 +32,7 @@ export function GlobalLeaderboard() {
     const sortedPlayers = [...playersWithNetWorth].sort((a, b) => b.netWorth - a.netWorth)
 
     return (
-        <Card className="flex flex-col border-primary/10 shadow-md relative">
+        <Card className="flex flex-col border-primary/10 shadow-md relative min-h-[50vh]">
             {/* Subtle Gradient Background */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full blur-3xl pointer-events-none" />
 

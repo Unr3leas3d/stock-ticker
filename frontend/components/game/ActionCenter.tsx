@@ -17,7 +17,7 @@ import { StockSymbol, TradeType } from "@/types/game"
 
 export function ActionCenter() {
     const { gameState, selfPlayer, actions, playerId, currentRoomId } = useGameState()
-    const [tradeAmount, setTradeAmount] = useState(10)
+    const [tradeAmount, setTradeAmount] = useState(0)
     const [selectedStock, setSelectedStock] = useState<StockSymbol>("Gold")
 
     if (!gameState || !selfPlayer) return null
@@ -238,14 +238,29 @@ export function ActionCenter() {
                                                         className="text-lg font-bold h-11"
                                                         disabled={!canTrade || selfPlayer.isReady}
                                                     />
-                                                    <Button
-                                                        variant="outline"
-                                                        className="h-11 px-4 text-xs font-bold font-mono text-muted-foreground w-20 shrink-0"
-                                                        onClick={() => setTradeAmount(0)}
-                                                        disabled={!canTrade || selfPlayer.isReady}
-                                                    >
-                                                        CLR
-                                                    </Button>
+                                                    <div className="flex gap-1.5 w-[140px] shrink-0">
+                                                        <Button
+                                                            variant="outline"
+                                                            className="h-11 flex-1 text-[10px] font-bold uppercase tracking-wider bg-green-50 hover:bg-green-100 hover:text-green-700 text-green-600 border-green-200"
+                                                            onClick={() => {
+                                                                const price = gameState.market[selectedStock]?.currentValue;
+                                                                if (price > 0) {
+                                                                    setTradeAmount(Math.floor(selfPlayer.cash / price));
+                                                                }
+                                                            }}
+                                                            disabled={!canTrade || selfPlayer.isReady || (gameState.market[selectedStock]?.currentValue || 0) <= 0}
+                                                        >
+                                                            Max
+                                                        </Button>
+                                                        <Button
+                                                            variant="outline"
+                                                            className="h-11 px-3 text-xs font-bold font-mono text-muted-foreground shrink-0"
+                                                            onClick={() => setTradeAmount(0)}
+                                                            disabled={!canTrade || selfPlayer.isReady}
+                                                        >
+                                                            CLR
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                                 <div className="flex flex-wrap gap-1.5 pt-1">
                                                     {[100, 500, 1000, 2000, 5000].map(val => (
