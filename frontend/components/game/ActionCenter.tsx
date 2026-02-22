@@ -222,17 +222,37 @@ export function ActionCenter() {
                                                     <span className="text-[10px] text-red-500 font-bold uppercase">Insufficient Cash</span>
                                                 )}
                                             </div>
-                                            <div className="flex gap-2">
-                                                <Input
-                                                    type="number"
-                                                    value={tradeAmount}
-                                                    onChange={(e) => setTradeAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                                                    className="text-lg font-bold"
-                                                    disabled={!canTrade || selfPlayer.isReady}
-                                                />
-                                                <div className="flex flex-col gap-1 w-24">
-                                                    <Button variant="outline" size="sm" onClick={() => setTradeAmount(prev => prev + 100)} className="h-6 text-[10px]" disabled={!canTrade || selfPlayer.isReady}>MAX 1000</Button>
-                                                    <Button variant="outline" size="sm" onClick={() => setTradeAmount(0)} className="h-6 text-[10px]" disabled={!canTrade || selfPlayer.isReady}>RESET</Button>
+                                            <div className="space-y-2">
+                                                <div className="flex gap-2">
+                                                    <Input
+                                                        type="number"
+                                                        value={tradeAmount}
+                                                        onChange={(e) => setTradeAmount(Math.max(0, parseInt(e.target.value) || 0))}
+                                                        className="text-lg font-bold h-11"
+                                                        disabled={!canTrade || selfPlayer.isReady}
+                                                    />
+                                                    <Button
+                                                        variant="outline"
+                                                        className="h-11 px-4 text-xs font-bold font-mono text-muted-foreground w-20 shrink-0"
+                                                        onClick={() => setTradeAmount(0)}
+                                                        disabled={!canTrade || selfPlayer.isReady}
+                                                    >
+                                                        CLR
+                                                    </Button>
+                                                </div>
+                                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                                    {[100, 500, 1000, 2000, 5000].map(val => (
+                                                        <Button
+                                                            key={`buy-${val}`}
+                                                            variant="secondary"
+                                                            size="sm"
+                                                            className="flex-1 h-8 text-[11px] font-bold tracking-tight bg-slate-100 hover:bg-slate-200 text-slate-700"
+                                                            onClick={() => setTradeAmount(prev => prev + val)}
+                                                            disabled={!canTrade || selfPlayer.isReady}
+                                                        >
+                                                            +{val}
+                                                        </Button>
+                                                    ))}
                                                 </div>
                                             </div>
                                             <p className="text-xs text-muted-foreground text-right font-medium">
@@ -287,17 +307,47 @@ export function ActionCenter() {
                                                     <span className="text-[10px] text-red-500 font-bold uppercase">Not enough shares</span>
                                                 )}
                                             </div>
-                                            <div className="flex gap-2">
-                                                <Input
-                                                    type="number"
-                                                    value={tradeAmount}
-                                                    onChange={(e) => setTradeAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                                                    className="text-lg font-bold"
-                                                    disabled={!canTrade || selfPlayer.isReady}
-                                                />
-                                                <div className="flex flex-col gap-1 w-24">
-                                                    <Button variant="outline" size="sm" onClick={() => setTradeAmount(selfPlayer.portfolio[selectedStock] || 0)} className="h-6 text-[10px]" disabled={!canTrade || selfPlayer.isReady}>SELL ALL</Button>
-                                                    <Button variant="outline" size="sm" onClick={() => setTradeAmount(0)} className="h-6 text-[10px]" disabled={!canTrade || selfPlayer.isReady}>RESET</Button>
+                                            <div className="space-y-2">
+                                                <div className="flex gap-2">
+                                                    <Input
+                                                        type="number"
+                                                        value={tradeAmount}
+                                                        onChange={(e) => setTradeAmount(Math.max(0, parseInt(e.target.value) || 0))}
+                                                        className="text-lg font-bold h-11"
+                                                        disabled={!canTrade || selfPlayer.isReady}
+                                                    />
+                                                    <div className="flex gap-1.5 w-[140px] shrink-0">
+                                                        <Button
+                                                            variant="outline"
+                                                            className="h-11 flex-1 text-[10px] font-bold uppercase tracking-wider bg-red-50 hover:bg-red-100 hover:text-red-700 text-red-600 border-red-200"
+                                                            onClick={() => setTradeAmount(selfPlayer.portfolio[selectedStock] || 0)}
+                                                            disabled={!canTrade || selfPlayer.isReady}
+                                                        >
+                                                            All
+                                                        </Button>
+                                                        <Button
+                                                            variant="outline"
+                                                            className="h-11 px-3 text-xs font-bold font-mono text-muted-foreground shrink-0"
+                                                            onClick={() => setTradeAmount(0)}
+                                                            disabled={!canTrade || selfPlayer.isReady}
+                                                        >
+                                                            CLR
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                                    {[100, 500, 1000, 2000, 5000].map(val => (
+                                                        <Button
+                                                            key={`sell-${val}`}
+                                                            variant="secondary"
+                                                            size="sm"
+                                                            className="flex-1 h-8 text-[11px] font-bold tracking-tight bg-slate-100 hover:bg-slate-200 text-slate-700"
+                                                            onClick={() => setTradeAmount(prev => prev + val)}
+                                                            disabled={!canTrade || selfPlayer.isReady}
+                                                        >
+                                                            +{val}
+                                                        </Button>
+                                                    ))}
                                                 </div>
                                             </div>
                                             <p className="text-xs text-muted-foreground text-right font-medium">
