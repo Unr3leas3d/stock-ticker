@@ -39,6 +39,7 @@ export interface Player {
     avatar: string;
     cash: number;
     portfolio: Record<StockSymbol, number>;
+    avgBuyPrices: Record<StockSymbol, number>;
     hasUsedLoan: boolean;
     isBankrupt: boolean;
     isReady: boolean;

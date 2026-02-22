@@ -75,12 +75,13 @@ export function ActionCenter() {
     }
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full overflow-y-auto pb-12 w-full custom-scrollbar pr-2">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-12 w-full pr-2">
 
             {/* Player Ledger */}
-            <div className="md:col-span-4 lg:col-span-3 h-[500px]">
+            <div className="md:col-span-4 lg:col-span-3">
                 <PlayerLedgerCard
                     player={{ ...selfPlayer, netWorth: myNetWorth, isSelf: true }}
+                    market={gameState.market}
                     onRequestLoan={actions.requestLoan}
                 />
             </div>
@@ -356,9 +357,18 @@ export function ActionCenter() {
                                                     ))}
                                                 </div>
                                             </div>
-                                            <p className="text-xs text-muted-foreground text-right font-medium">
-                                                Estimated Credit: <span className="text-foreground">${(gameState.market[selectedStock]?.currentValue * tradeAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                            </p>
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-xs text-muted-foreground font-medium">
+                                                    Estimated Credit: <span className="text-foreground">${(gameState.market[selectedStock]?.currentValue * tradeAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                </p>
+                                                {tradeAmount > 0 && selfPlayer.avgBuyPrices[selectedStock] > 0 && (
+                                                    <p className={`text-[10px] font-bold uppercase tracking-tight ${gameState.market[selectedStock].currentValue >= selfPlayer.avgBuyPrices[selectedStock] ? 'text-green-500' : 'text-red-500'}`}>
+                                                        Est. {gameState.market[selectedStock].currentValue >= selfPlayer.avgBuyPrices[selectedStock] ? 'Profit' : 'Loss'}:
+                                                        ${Math.abs((gameState.market[selectedStock].currentValue - selfPlayer.avgBuyPrices[selectedStock]) * tradeAmount).toFixed(2)}
+                                                        ({((gameState.market[selectedStock].currentValue - selfPlayer.avgBuyPrices[selectedStock]) / selfPlayer.avgBuyPrices[selectedStock] * 100).toFixed(1)}%)
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <Button
@@ -378,7 +388,7 @@ export function ActionCenter() {
             </div>
 
             {/* Leaderboard */}
-            <div className="md:col-span-4 lg:col-span-3 h-[500px] flex flex-col">
+            <div className="md:col-span-4 lg:col-span-3 flex flex-col">
                 <GlobalLeaderboard />
             </div>
 

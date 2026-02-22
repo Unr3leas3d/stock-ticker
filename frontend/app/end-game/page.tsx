@@ -125,7 +125,7 @@ export default function EndGamePage() {
                     </CardContent>
                     <CardFooter className="bg-muted/10 border-t p-6 flex justify-center">
                         <div className="flex flex-col gap-4 w-full">
-                            <Button size="lg" variant="outline" className="w-full text-base h-12" onClick={() => window.location.href = '/'}>
+                            <Button size="lg" variant="outline" className="w-full text-base h-12" onClick={() => window.location.href = '/lobby'}>
                                 Play Again
                             </Button>
                         </div>

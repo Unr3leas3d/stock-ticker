@@ -39,6 +39,7 @@ export interface Player {
     avatar: string; // Keep although we removed it visually, backend might expect it or we can ignore it
     cash: number;
     portfolio: Record<StockSymbol, number>;
+    avgBuyPrices: Record<StockSymbol, number>;
     hasUsedLoan: boolean;
     isBankrupt: boolean;
     isReady: boolean;

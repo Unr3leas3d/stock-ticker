@@ -87,6 +87,7 @@ export class GameEngine {
                 avatar,
                 cash: this.state.settings.initialCash,
                 portfolio: { Gold: 0, Silver: 0, Oil: 0, Industrial: 0, Bonds: 0, Grain: 0 },
+                avgBuyPrices: { Gold: 0, Silver: 0, Oil: 0, Industrial: 0, Bonds: 0, Grain: 0 },
                 hasUsedLoan: false,
                 isBankrupt: false,
                 isReady: false,
@@ -123,6 +124,7 @@ export class GameEngine {
                 ...player,
                 cash: customSettings.initialCash,
                 portfolio: { Gold: 0, Silver: 0, Oil: 0, Industrial: 0, Bonds: 0, Grain: 0 },
+                avgBuyPrices: { Gold: 0, Silver: 0, Oil: 0, Industrial: 0, Bonds: 0, Grain: 0 },
                 hasUsedLoan: false,
                 isBankrupt: false,
                 isReady: false
@@ -332,13 +334,15 @@ export class GameEngine {
                 Object.values(this.state.players).forEach(p => p.portfolio[stock] = 0);
                 data.currentValue = INITIAL_STOCK_PRICE;
                 data.status = 'NORMAL';
-                // Reset history to start fresh after bankruptcy
+                // Reset history and avg prices to start fresh after bankruptcy
                 data.history = [INITIAL_STOCK_PRICE];
+                Object.values(this.state.players).forEach(p => p.avgBuyPrices[stock] = 0);
             } else if (data.status === 'PENDING_SPLIT') {
                 this.addLog(`🎉 ${stock} SPLIT! Shares doubled. Prices reset to $1.00. 🎉`);
                 Object.values(this.state.players).forEach(p => {
                     if (p.portfolio[stock] > 0) {
                         p.portfolio[stock] *= 2;
+                        p.avgBuyPrices[stock] /= 2;
                     }
                 });
                 data.currentValue = INITIAL_STOCK_PRICE;
@@ -365,7 +369,7 @@ export class GameEngine {
         }
 
         // Check if we hit the limit
-        if (this.state.completedRounds >= this.state.roundLength * this.state.tradingInterval) {
+        if (this.state.completedRounds >= this.state.roundLength) {
             this.setPhase('END_GAME');
             this.addLog('Game Over!');
             return;
@@ -400,16 +404,39 @@ export class GameEngine {
 
         if (type === 'BUY') {
             if (player.cash >= totalCost) {
+                const currentQty = player.portfolio[stock] || 0;
+                const currentAvg = player.avgBuyPrices[stock] || 0;
+
+                // Calculate new average: (total cost of old + cost of new) / total quantity
+                const newAvg = ((currentAvg * currentQty) + (marketPrice * amount)) / (currentQty + amount);
+                player.avgBuyPrices[stock] = Math.round(newAvg * 100) / 100;
+
                 player.cash -= totalCost;
-                player.portfolio[stock] = (player.portfolio[stock] || 0) + amount;
+                player.portfolio[stock] = currentQty + amount;
                 this.addLog(`${player.name} bought ${amount} ${stock} @ $${marketPrice.toFixed(2)}`);
                 this.syncState();
             }
         } else if (type === 'SELL') {
-            if ((player.portfolio[stock] || 0) >= amount) {
+            const currentQty = player.portfolio[stock] || 0;
+            if (currentQty >= amount) {
+                const avgBuyPrice = player.avgBuyPrices[stock] || 0;
+                const profitPerShare = marketPrice - avgBuyPrice;
+                const totalProfit = profitPerShare * amount;
+                const marginPercent = avgBuyPrice > 0 ? (profitPerShare / avgBuyPrice) * 100 : 0;
+
                 player.portfolio[stock] -= amount;
                 player.cash += totalCost;
-                this.addLog(`${player.name} sold ${amount} ${stock} @ $${marketPrice.toFixed(2)}`);
+
+                // Reset average if all sold
+                if (player.portfolio[stock] === 0) {
+                    player.avgBuyPrices[stock] = 0;
+                }
+
+                const profitStr = totalProfit >= 0 ? `profit` : `loss`;
+                const absProfit = Math.abs(totalProfit).toFixed(2);
+                const marginStr = `${totalProfit >= 0 ? '+' : ''}${marginPercent.toFixed(1)}%`;
+
+                this.addLog(`${player.name} sold ${amount} ${stock} @ $${marketPrice.toFixed(2)} (${profitStr}: $${absProfit}, ${marginStr})`);
                 this.syncState();
             }
         }

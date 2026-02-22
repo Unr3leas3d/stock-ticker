@@ -32,7 +32,7 @@ export function GlobalLeaderboard() {
     const sortedPlayers = [...playersWithNetWorth].sort((a, b) => b.netWorth - a.netWorth)
 
     return (
-        <Card className="h-full flex flex-col border-primary/10 shadow-md relative overflow-hidden">
+        <Card className="flex flex-col border-primary/10 shadow-md relative">
             {/* Subtle Gradient Background */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -99,7 +99,10 @@ export function GlobalLeaderboard() {
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-md p-0 border-none bg-transparent shadow-none">
                                 <DialogTitle className="sr-only">{player.name}'s Ledger</DialogTitle>
-                                <PlayerLedgerCard player={{ ...player, isSelf: player.id === playerId }} />
+                                <PlayerLedgerCard
+                                    player={{ ...player, isSelf: player.id === playerId }}
+                                    market={gameState.market}
+                                />
                             </DialogContent>
                         </Dialog>
                     ))}

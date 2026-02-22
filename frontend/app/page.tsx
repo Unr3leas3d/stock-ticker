@@ -16,15 +16,14 @@ export default function Home() {
   const [isLogOpen, setIsLogOpen] = useState(false)
 
   useEffect(() => {
-    if (!gameState || !selfPlayer) {
-      router.push('/lobby')
+    if (gameState?.currentPhase === 'END_GAME') {
+      router.push('/end-game')
       return
     }
 
-    if (gameState.currentPhase === 'LOBBY') {
+    if (!gameState || !selfPlayer || gameState.currentPhase === 'LOBBY') {
       router.push('/lobby')
-    } else if (gameState.currentPhase === 'END_GAME') {
-      router.push('/end-game')
+      return
     }
   }, [gameState?.currentPhase, selfPlayer, router])
 

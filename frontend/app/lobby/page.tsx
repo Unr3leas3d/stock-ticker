@@ -17,8 +17,9 @@ export default function LobbyPage() {
     const [isHosting, setIsHosting] = useState(false)
 
     useEffect(() => {
-        // If the game has already started, redirect to board
-        if (gameState && gameState.currentPhase !== 'LOBBY') {
+        // Only redirect to board if it's an active gameplay phase
+        const activePhases = ['INITIAL_BUY_IN', 'ROLLING', 'RESOLVING_ROLL', 'PAYING_DIVIDENDS', 'STOCK_EVENT_PHASE', 'OPEN_MARKET']
+        if (gameState && activePhases.includes(gameState.currentPhase)) {
             router.push('/')
         }
     }, [gameState?.currentPhase, router])

@@ -21,7 +21,7 @@ export function MarketEventLog({ onClose }: MarketEventLogProps) {
         if (lowerLog.includes('up') || lowerLog.includes('bought') || lowerLog.includes('surge') || lowerLog.includes('profit')) {
             return 'text-green-600 dark:text-green-400'
         }
-        if (lowerLog.includes('down') || lowerLog.includes('sold') || lowerLog.includes('plummet') || lowerLog.includes('bankrupt')) {
+        if (lowerLog.includes('down') || lowerLog.includes('sold') || lowerLog.includes('plummet') || lowerLog.includes('bankrupt') || lowerLog.includes('loss')) {
             return 'text-red-600 dark:text-red-400'
         }
         if (lowerLog.includes('split')) {
@@ -38,7 +38,7 @@ export function MarketEventLog({ onClose }: MarketEventLogProps) {
         if (lowerLog.includes('up') || lowerLog.includes('bought') || lowerLog.includes('surge') || lowerLog.includes('profit')) {
             return 'bg-green-500'
         }
-        if (lowerLog.includes('down') || lowerLog.includes('sold') || lowerLog.includes('plummet') || lowerLog.includes('bankrupt')) {
+        if (lowerLog.includes('down') || lowerLog.includes('sold') || lowerLog.includes('plummet') || lowerLog.includes('bankrupt') || lowerLog.includes('loss')) {
             return 'bg-red-500'
         }
         if (lowerLog.includes('split')) {
