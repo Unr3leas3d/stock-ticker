@@ -18,6 +18,8 @@ export const metadata: Metadata = {
 };
 
 import { GameStateProvider } from "@/hooks/useGameState";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ModeToggle } from "@/components/ui/mode-toggle";
 
 export default function RootLayout({
   children,
@@ -25,13 +27,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <GameStateProvider>
-          {children}
-        </GameStateProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <GameStateProvider>
+            <div className="fixed top-4 right-4 z-50">
+              <ModeToggle />
+            </div>
+            {children}
+          </GameStateProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
