@@ -253,10 +253,10 @@ export class GameEngine {
             });
         }
 
-        // Give clients 4 seconds to animate the roll before processing (added 1s for suspense)
+        // Give clients 7.5 seconds to animate the roll and digest the result before processing
         setTimeout(() => {
             this.processRollResult(stockRolled, directionFace, amountValue);
-        }, 4500);
+        }, 7500);
     }
 
     private processRollResult(stock: StockSymbol, action: string, amount: number) {
