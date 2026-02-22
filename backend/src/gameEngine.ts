@@ -352,8 +352,17 @@ export class GameEngine {
     }
 
     private advanceTurn() {
-        this.state.completedRounds += 1;
+        // Increment the current player index for the next roll
         this.state.currentPlayerIndex += 1;
+
+        const activePlayers = Object.keys(this.state.players).length;
+        const totalPlayers = activePlayers > 0 ? activePlayers : 1;
+
+        // If the currentPlayerIndex reaches totalPlayers, one full "round" of rolling has completed
+        if (this.state.currentPlayerIndex >= totalPlayers) {
+            this.state.completedRounds += 1;
+            this.state.currentPlayerIndex = 0; // Reset index back to the first player
+        }
 
         // Check if we hit the limit
         if (this.state.completedRounds >= this.state.roundLength * this.state.tradingInterval) {
@@ -363,16 +372,16 @@ export class GameEngine {
         }
 
         // Check if it's time for Open Market (tradingInterval reached)
-        const activePlayers = Object.keys(this.state.players).length;
-        // Simplify: interval is calculated per player turns = full round
-        const turnsPerRound = activePlayers > 0 ? activePlayers : 1;
-
-        if (this.state.completedRounds % (turnsPerRound * this.state.tradingInterval) === 0) {
+        // Since we only increment completedRounds after ALL players have gone,
+        // we just check if completedRounds is a multiple of tradingInterval,
+        // but ONLY trigger it when a round just finished (currentPlayerIndex is 0).
+        if (this.state.currentPlayerIndex === 0 && this.state.completedRounds > 0 && this.state.completedRounds % this.state.tradingInterval === 0) {
             this.addLog('Market is open for trading!');
             this.setPhase('OPEN_MARKET');
         } else {
             this.setPhase('ROLLING');
         }
+
         this.syncState();
     }
 
