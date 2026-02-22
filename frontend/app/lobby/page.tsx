@@ -43,15 +43,15 @@ export default function LobbyPage() {
     const isHost = selfPlayer && playersList[0] && selfPlayer.id === playersList[0].id
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 md:p-8">
+        <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 md:p-8">
             <div className="w-full max-w-md space-y-8">
                 {/* Branding Header */}
                 <div className="text-center space-y-2">
                     <div className="inline-flex items-center justify-center p-3 bg-yellow-100 rounded-full mb-4">
                         <Trophy className="h-8 w-8 text-yellow-600" />
                     </div>
-                    <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Stock Ticker</h1>
-                    <p className="text-slate-500">The classic market simulation game</p>
+                    <h1 className="text-4xl font-extrabold tracking-tight text-foreground">Stock Ticker</h1>
+                    <p className="text-muted-foreground">The classic market simulation game</p>
                 </div>
 
                 {/* Setup Card */}
@@ -71,11 +71,11 @@ export default function LobbyPage() {
                         {!hasJoined ? (
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="name" className="text-sm font-bold text-slate-700 uppercase tracking-wider">Your Name</Label>
+                                    <Label htmlFor="name" className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Your Name</Label>
                                     <Input
                                         id="name"
                                         placeholder="e.g. Gordon Gekko"
-                                        className="h-12 text-lg text-center font-semibold bg-slate-50"
+                                        className="h-12 text-lg text-center font-semibold bg-slate-50 dark:bg-slate-900"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         disabled={!isConnected}
@@ -84,11 +84,11 @@ export default function LobbyPage() {
 
                                 {!isHosting ? (
                                     <div className="space-y-2">
-                                        <Label htmlFor="roomId" className="text-sm font-bold text-slate-700 uppercase tracking-wider">Room ID</Label>
+                                        <Label htmlFor="roomId" className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Room ID</Label>
                                         <Input
                                             id="roomId"
                                             placeholder="Enter 4-char ID"
-                                            className="h-12 text-lg text-center font-bold tracking-widest bg-slate-50 uppercase"
+                                            className="h-12 text-lg text-center font-bold tracking-widest bg-slate-50 dark:bg-slate-900 uppercase"
                                             value={inputRoomId}
                                             onChange={(e) => setInputRoomId(e.target.value.toUpperCase())}
                                             disabled={!isConnected}
@@ -140,7 +140,7 @@ export default function LobbyPage() {
                             </div>
                         ) : (
                             <div className="space-y-6">
-                                <div className="p-4 bg-green-50 text-green-700 rounded-lg text-center font-medium border border-green-200">
+                                <div className="p-4 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 rounded-lg text-center font-medium border border-green-200 dark:border-green-800">
                                     Joined as <strong>{selfPlayer.name}</strong> in room <strong>{currentRoomId}</strong>
                                 </div>
 
@@ -153,7 +153,7 @@ export default function LobbyPage() {
                                         </span>
                                         <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-full">{playersList.length}/6</span>
                                     </div>
-                                    <div className="divide-y bg-slate-50/50">
+                                    <div className="divide-y bg-slate-50/50 dark:bg-slate-900/50">
                                         {playersList.length === 0 ? (
                                             <div className="p-6 text-center text-muted-foreground text-sm flex flex-col items-center justify-center">
                                                 Waiting for players...
@@ -161,7 +161,7 @@ export default function LobbyPage() {
                                         ) : playersList.map((player, idx) => (
                                             <div key={player.id} className="flex items-center justify-between p-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="h-8 w-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600">
+                                                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center font-bold text-muted-foreground">
                                                         {player.name.charAt(0).toUpperCase()}
                                                     </div>
                                                     <span className={`font-medium flex items-center gap-2 ${player.id === selfPlayer?.id ? 'text-primary font-bold' : ''}`}>
@@ -179,52 +179,52 @@ export default function LobbyPage() {
 
                                 {/* Game Configuration (Host Only or Sync View) */}
                                 {gameState?.settings && (
-                                    <div className="space-y-4 p-5 rounded-xl bg-slate-100/50 border border-slate-200">
+                                    <div className="space-y-4 p-5 rounded-xl bg-slate-100/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
                                         <div className="flex items-center gap-2 mb-2">
                                             <div className="p-1.5 bg-primary/10 rounded-lg text-primary">
                                                 <Trophy className="h-4 w-4" />
                                             </div>
                                             <div className="flex-1">
-                                                <h4 className="text-sm font-bold uppercase tracking-tight text-slate-800">Game metrics (Host)</h4>
+                                                <h4 className="text-sm font-bold uppercase tracking-tight text-foreground">Game metrics (Host)</h4>
                                                 <p className="text-[10px] text-muted-foreground">{isHost ? "Tune these before starting" : "Configured by host"}</p>
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-1.5">
-                                                <Label className="text-[10px] font-black uppercase text-slate-500">Initial Cash</Label>
+                                                <Label className="text-[10px] font-black uppercase text-muted-foreground">Initial Cash</Label>
                                                 <Input
                                                     key={`cash-${gameState.settings.initialCash}`}
                                                     type="number"
                                                     defaultValue={gameState.settings.initialCash}
                                                     onBlur={(e) => actions.updateSettings({ initialCash: Number(e.target.value) })}
                                                     disabled={!isHost}
-                                                    className="h-9 font-bold bg-white"
+                                                    className="h-9 font-bold bg-background"
                                                 />
                                             </div>
                                             <div className="space-y-1.5">
-                                                <Label className="text-[10px] font-black uppercase text-slate-500">Max Rounds</Label>
+                                                <Label className="text-[10px] font-black uppercase text-muted-foreground">Max Rounds</Label>
                                                 <Input
                                                     key={`rounds-${gameState.settings.maxRounds}`}
                                                     type="number"
                                                     defaultValue={gameState.settings.maxRounds}
                                                     onBlur={(e) => actions.updateSettings({ maxRounds: Number(e.target.value) })}
                                                     disabled={!isHost}
-                                                    className="h-9 font-bold bg-white"
+                                                    className="h-9 font-bold bg-background"
                                                 />
                                             </div>
                                             <div className="space-y-1.5">
-                                                <Label className="text-[10px] font-black uppercase text-slate-500">Trade Interval</Label>
+                                                <Label className="text-[10px] font-black uppercase text-muted-foreground">Trade Interval</Label>
                                                 <Input
                                                     type="number"
                                                     value={gameState.settings.tradingInterval}
                                                     onChange={(e) => actions.updateSettings({ tradingInterval: Number(e.target.value) })}
                                                     disabled={!isHost}
-                                                    className="h-9 font-bold bg-white"
+                                                    className="h-9 font-bold bg-background"
                                                 />
                                             </div>
                                             <div className="space-y-1.5">
-                                                <Label className="text-[10px] font-black uppercase text-slate-500">Loans</Label>
+                                                <Label className="text-[10px] font-black uppercase text-muted-foreground">Loans</Label>
                                                 <Button
                                                     variant={gameState.settings.enableLoans ? "default" : "outline"}
                                                     size="sm"

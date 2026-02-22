@@ -51,14 +51,14 @@ export function MarketEventLog({ onClose }: MarketEventLogProps) {
     }
 
     return (
-        <div className="flex flex-col h-full w-full bg-slate-50 border-l border-slate-200 shadow-2xl">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white">
-                <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
+        <div className="flex flex-col h-full w-full bg-background border-l border-border shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
+                <h2 className="text-xl font-bold flex items-center gap-2 text-foreground">
                     <History className="h-5 w-5 text-primary" /> Market Event Log
                 </h2>
                 {onClose && (
-                    <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-slate-100">
-                        <X className="h-5 w-5 text-slate-500" />
+                    <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-muted">
+                        <X className="h-5 w-5 text-muted-foreground" />
                     </Button>
                 )}
             </div>
@@ -71,7 +71,7 @@ export function MarketEventLog({ onClose }: MarketEventLogProps) {
                                 Waiting for market activity...
                             </div>
                         ) : [...tickerLog].reverse().map((log, index) => (
-                            <div key={index} className="flex gap-4 items-start text-sm pb-4 border-b border-slate-100 last:border-0 relative hover:bg-slate-100/50 p-2 rounded-lg transition-colors">
+                            <div key={index} className="flex gap-4 items-start text-sm pb-4 border-b border-border last:border-0 relative hover:bg-muted/50 p-2 rounded-lg transition-colors">
                                 <span className={`relative flex h-2.5 w-2.5 mt-1.5 flex-none rounded-full shadow-sm ${getDotColorForEvent(log)}`} />
                                 <p className={`leading-relaxed font-semibold text-[15px] ${getColorForEvent(log)}`}>{log}</p>
                             </div>
