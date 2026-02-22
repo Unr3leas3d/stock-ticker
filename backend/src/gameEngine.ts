@@ -114,12 +114,14 @@ export class GameEngine {
         this.state.roundLength = this.state.settings.maxRounds;
         this.state.tradingInterval = this.state.settings.tradingInterval;
 
-        // Preserve players but reset their assets
+        // Preserve players and custom settings
         const existingPlayers = { ...this.state.players };
+        const customSettings = { ...this.state.settings };
+
         for (const [id, player] of Object.entries(existingPlayers)) {
             existingPlayers[id] = {
                 ...player,
-                cash: this.state.settings.initialCash,
+                cash: customSettings.initialCash,
                 portfolio: { Gold: 0, Silver: 0, Oil: 0, Industrial: 0, Bonds: 0, Grain: 0 },
                 hasUsedLoan: false,
                 isBankrupt: false,
@@ -131,6 +133,9 @@ export class GameEngine {
         const currentRoomId = this.state.roomId;
         this.state = this.createInitialState(currentRoomId);
         this.state.players = existingPlayers;
+        this.state.settings = customSettings;
+        this.state.roundLength = customSettings.maxRounds;
+        this.state.tradingInterval = customSettings.tradingInterval;
 
         this.setPhase('INITIAL_BUY_IN');
         this.addLog('Game Started! Initial Buy-in Phase.');
