@@ -69,7 +69,7 @@ export function ActionCenter() {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full overflow-y-auto pb-12 w-full custom-scrollbar pr-2">
 
             {/* Player Ledger */}
             <div className="md:col-span-4 lg:col-span-3 h-[500px]">

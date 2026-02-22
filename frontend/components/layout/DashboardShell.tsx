@@ -13,16 +13,14 @@ export function DashboardShell({
     return (
         <div
             className={cn(
-                "flex min-h-screen w-full flex-col bg-muted/40",
+                "flex h-full w-full flex-col bg-muted/40 overflow-hidden",
                 className
             )}
             {...props}
         >
-
-
             {/* Main Content Area */}
-            <main className="flex-1 overflow-auto p-4 sm:p-6 md:p-8">
-                <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:gap-8">
+            <main className="flex-1 overflow-hidden p-4 sm:p-6 md:px-8">
+                <div className="mx-auto flex h-full w-full max-w-7xl flex-col">
                     {children}
                 </div>
             </main>

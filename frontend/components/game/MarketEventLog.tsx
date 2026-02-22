@@ -1,12 +1,16 @@
 "use client"
 
 import React from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { History } from "lucide-react"
+import { History, X } from "lucide-react"
 import { useGameState } from "@/hooks/useGameState"
+import { Button } from "@/components/ui/button"
 
-export function MarketEventLog() {
+interface MarketEventLogProps {
+    onClose?: () => void;
+}
+
+export function MarketEventLog({ onClose }: MarketEventLogProps) {
     const { gameState } = useGameState()
 
     // Get log from state, fallback to empty
@@ -47,28 +51,34 @@ export function MarketEventLog() {
     }
 
     return (
-        <Card className="w-full">
-            <CardHeader className="py-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <History className="h-4 w-4" /> Market Event Log
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="pb-4">
-                <ScrollArea className="h-32 w-full pr-4">
-                    <div className="space-y-3">
+        <div className="flex flex-col h-full w-full bg-slate-50 border-l border-slate-200 shadow-2xl">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white">
+                <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
+                    <History className="h-5 w-5 text-primary" /> Market Event Log
+                </h2>
+                {onClose && (
+                    <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-slate-100">
+                        <X className="h-5 w-5 text-slate-500" />
+                    </Button>
+                )}
+            </div>
+
+            <div className="flex-1 overflow-hidden">
+                <ScrollArea className="h-full w-full px-6 py-4">
+                    <div className="space-y-5 pb-8">
                         {tickerLog.length === 0 ? (
-                            <div className="text-xs text-muted-foreground italic p-2">
+                            <div className="text-sm text-muted-foreground italic text-center mt-10">
                                 Waiting for market activity...
                             </div>
                         ) : [...tickerLog].reverse().map((log, index) => (
-                            <div key={index} className="flex gap-4 items-start text-sm pb-2 border-b last:border-0 relative">
-                                <span className={`relative flex h-2 w-2 mt-1 flex-none rounded-full ${getDotColorForEvent(log)}`} />
-                                <p className={`leading-relaxed font-medium ${getColorForEvent(log)}`}>{log}</p>
+                            <div key={index} className="flex gap-4 items-start text-sm pb-4 border-b border-slate-100 last:border-0 relative hover:bg-slate-100/50 p-2 rounded-lg transition-colors">
+                                <span className={`relative flex h-2.5 w-2.5 mt-1.5 flex-none rounded-full shadow-sm ${getDotColorForEvent(log)}`} />
+                                <p className={`leading-relaxed font-semibold text-[15px] ${getColorForEvent(log)}`}>{log}</p>
                             </div>
                         ))}
                     </div>
                 </ScrollArea>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     )
 }
