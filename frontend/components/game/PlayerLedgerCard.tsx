@@ -46,7 +46,16 @@ export function PlayerLedgerCard({ player, onRequestLoan }: PlayerLedgerCardProp
                     <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                         <Briefcase className="h-4 w-4" /> Net Worth (Est.)
                     </p>
-                    <p className="text-xl font-bold">${player.netWorth.toFixed(2)}</p>
+                    <div className="flex flex-col">
+                        <p className="text-xl font-bold">
+                            ${(player.netWorth - (player.hasUsedLoan ? 1500 : 0)).toFixed(2)}
+                        </p>
+                        {player.hasUsedLoan && (
+                            <p className="text-[10px] text-red-500 font-semibold tracking-tighter mt-0.5 leading-none">
+                                Includes -$1,500 loan debt
+                            </p>
+                        )}
+                    </div>
                 </div>
 
                 <div className="space-y-2 pt-4 border-t">

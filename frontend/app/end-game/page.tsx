@@ -37,9 +37,15 @@ export default function EndGamePage() {
             }
         })
 
+        // Loan deduction: $1000 principal + $500 interest
+        const loanDeduction = player.hasUsedLoan ? 1500 : 0
+        const finalNetWorth = player.cash + portfolioValue - loanDeduction
+
         return {
             ...player,
-            netWorth: player.cash + portfolioValue
+            portfolioValue,
+            loanDeduction,
+            netWorth: finalNetWorth
         }
     }).sort((a, b) => b.netWorth - a.netWorth)
 
@@ -92,6 +98,9 @@ export default function EndGamePage() {
                                                 <p className={`text-lg font-bold leading-none ${player.id === playerId ? 'text-primary' : index === 0 ? 'text-yellow-700' : ''}`}>
                                                     {player.name}
                                                 </p>
+                                                {player.hasUsedLoan && (
+                                                    <span className="text-[9px] font-bold uppercase tracking-wider bg-red-100 text-red-600 px-1.5 py-0.5 rounded ml-2">Loan Debt</span>
+                                                )}
                                             </div>
                                             {player.id === playerId && (
                                                 <p className="text-[10px] text-muted-foreground mt-1 tracking-wider uppercase font-bold">You</p>
@@ -104,6 +113,11 @@ export default function EndGamePage() {
                                             ${player.netWorth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </p>
                                         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Final Net Worth</p>
+                                        {player.hasUsedLoan && (
+                                            <p className="text-[10px] text-red-500 font-semibold tracking-tighter mt-1">
+                                                (-$1,500.00 Repayment)
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             ))}

@@ -403,11 +403,20 @@ export class GameEngine {
 
     public requestLoan(socketId: string) {
         const player = this.state.players[socketId];
-        if (player && !player.hasUsedLoan) {
+        if (!player || player.hasUsedLoan) return;
+
+        // Player is bankrupt if they have no cash AND no stocks of value they can sell
+        const hasSellableStocks = Object.entries(player.portfolio).some(([sym, qty]) => {
+            return qty > 0 && this.state.market[sym as StockSymbol]?.currentValue > 0;
+        });
+
+        if (player.cash <= 0 && !hasSellableStocks) {
             player.hasUsedLoan = true;
             player.cash += LOAN_AMOUNT;
-            this.addLog(`${player.name} took an emergency loan of $${LOAN_AMOUNT}`);
+            this.addLog(`${player.name} took an emergency loan of $${LOAN_AMOUNT} (Repayment + Interest: $1,500 at game end)`);
             this.syncState();
+        } else {
+            this.addLog(`${player.name} requested a loan but is not bankrupt yet.`);
         }
     }
 

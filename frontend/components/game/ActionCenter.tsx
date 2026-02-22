@@ -53,6 +53,12 @@ export function ActionCenter() {
     // Determine if trading is allowed
     const canTrade = currentPhase === 'OPEN_MARKET' || currentPhase === 'INITIAL_BUY_IN'
 
+    // Determine bankruptcy for loan availability
+    const hasSellableStocks = Object.entries(selfPlayer.portfolio).some(([sym, qty]) => {
+        return qty > 0 && (gameState.market[sym as StockSymbol]?.currentValue || 0) > 0
+    })
+    const isActuallyBankrupt = selfPlayer.cash <= 0 && !hasSellableStocks
+
     // Determine the phase message
     const getPhaseMessage = () => {
         switch (currentPhase) {
@@ -266,10 +272,10 @@ export function ActionCenter() {
                                                     variant={selfPlayer.hasUsedLoan ? "secondary" : "outline"}
                                                     size="sm"
                                                     onClick={() => actions.requestLoan()}
-                                                    disabled={selfPlayer.hasUsedLoan || selfPlayer.isReady}
-                                                    className="w-full text-[10px] font-black uppercase tracking-widest h-9 border-dashed"
+                                                    disabled={selfPlayer.hasUsedLoan || selfPlayer.isReady || !isActuallyBankrupt}
+                                                    className={`w-full text-[10px] font-black uppercase tracking-widest h-9 border-dashed ${!isActuallyBankrupt && !selfPlayer.hasUsedLoan ? 'opacity-50' : ''}`}
                                                 >
-                                                    {selfPlayer.hasUsedLoan ? "Emergency Loan Used" : "Request Emergency Loan ($1000)"}
+                                                    {selfPlayer.hasUsedLoan ? "Emergency Loan Used" : isActuallyBankrupt ? "Request Emergency Loan ($1000)" : "Loan Unavailable (Must be bankrupt)"}
                                                 </Button>
                                             )}
 
