@@ -81,7 +81,8 @@ export const DiceAnimation: React.FC<DiceAnimationProps> = ({ rollResult, onComp
                 clearTimeout(t)
             })
         }
-    }, [rollResult, onComplete])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rollResult])
 
     const renderDie = (type: 'stock' | 'amount' | 'direction', value: any, isVisible: boolean, label: string) => {
         const isSettled = isVisible

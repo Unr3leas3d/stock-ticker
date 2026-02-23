@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { GameState, TradeType, StockSymbol, Player, GameSettings } from '@/types/game';
+import { toast } from 'sonner';
 
 // Replace with your actual backend URL, usually localhost:3001
 const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
@@ -27,6 +28,9 @@ interface GameStateContextValue {
 
 const GameStateContext = createContext<GameStateContextValue | null>(null);
 
+// Module-level singleton — intentionally never disconnected.
+// The socket persists for the entire app lifetime. Listener cleanup
+// happens via .off() in the useEffect return to prevent duplicates.
 let socket: Socket | null = null;
 
 export const GameStateProvider = ({ children }: { children: ReactNode }) => {
@@ -82,7 +86,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
 
         const handleError = (payload: { message: string }) => {
             console.error("Game Error:", payload.message);
-            alert(payload.message)
+            toast.error(payload.message);
         };
 
         const handlePlayerForfeited = () => {

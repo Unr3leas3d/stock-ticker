@@ -24,6 +24,7 @@ import { GameStateProvider } from "@/hooks/useGameState";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { RulesModal } from "@/components/game/RulesModal";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({
   children,
@@ -47,6 +48,7 @@ export default function RootLayout({
               <ModeToggle />
             </div>
             {children}
+            <Toaster />
           </GameStateProvider>
         </ThemeProvider>
       </body>

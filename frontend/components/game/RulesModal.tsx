@@ -3,6 +3,7 @@
 import React from "react"
 import {
     Dialog,
+    DialogClose,
     DialogContent,
     DialogDescription,
     DialogHeader,
@@ -132,9 +133,11 @@ export function RulesModal() {
                 </div>
 
                 <div className="p-6 shrink-0 border-t bg-slate-50 dark:bg-slate-800/30">
-                    <Button onClick={() => document.querySelector('[data-slot="dialog-close"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))} className="w-full h-12 font-bold uppercase tracking-wider rounded-xl shadow-lg hover:shadow-xl transition-all">
-                        Got it, Let's Play!
-                    </Button>
+                    <DialogClose asChild>
+                        <Button className="w-full h-12 font-bold uppercase tracking-wider rounded-xl shadow-lg hover:shadow-xl transition-all">
+                            Got it, Let's Play!
+                        </Button>
+                    </DialogClose>
                 </div>
             </DialogContent>
         </Dialog>

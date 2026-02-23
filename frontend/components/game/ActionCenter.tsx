@@ -93,7 +93,6 @@ export function ActionCenter() {
                 <PlayerLedgerCard
                     player={{ ...selfPlayer, netWorth: myNetWorth, isSelf: true }}
                     market={gameState.market}
-                    onRequestLoan={actions.requestLoan}
                 />
             </div>
 
@@ -381,7 +380,7 @@ export function ActionCenter() {
                                                     <div className="flex gap-1.5 w-[140px] shrink-0">
                                                         <Button
                                                             variant="outline"
-                                                            className="h-11 flex-1 text-[10px] font-bold uppercase tracking-wider bg-red-50 hover:bg-red-100 hover:text-red-700 text-red-600 border-red-200"
+                                                            className="h-11 flex-1 text-[10px] font-bold uppercase tracking-wider bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 hover:text-red-700 dark:hover:text-red-400 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800"
                                                             onClick={() => setTradeAmount(selfPlayer.portfolio[selectedStock] || 0)}
                                                             disabled={!canTrade || selfPlayer.isReady}
                                                         >

@@ -71,7 +71,7 @@ export function MarketEventLog({ onClose }: MarketEventLogProps) {
                                 Waiting for market activity...
                             </div>
                         ) : [...tickerLog].reverse().map((log, index) => (
-                            <div key={index} className="flex gap-4 items-start text-sm pb-4 border-b border-border last:border-0 relative hover:bg-muted/50 p-2 rounded-lg transition-colors">
+                            <div key={`${tickerLog.length - 1 - index}-${log.slice(0, 20)}`} className="flex gap-4 items-start text-sm pb-4 border-b border-border last:border-0 relative hover:bg-muted/50 p-2 rounded-lg transition-colors">
                                 <span className={`relative flex h-2.5 w-2.5 mt-1.5 flex-none rounded-full shadow-sm ${getDotColorForEvent(log)}`} />
                                 <p className={`leading-relaxed font-semibold text-[15px] ${getColorForEvent(log)}`}>{log}</p>
                             </div>

@@ -4,7 +4,7 @@ import { Server, Socket } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { z } from 'zod';
-import { GameEngine } from './gameEngine.js';
+import { GameEngine, MAX_PLAYERS } from './gameEngine.js';
 import type { TradeType, StockSymbol } from './types.js';
 
 dotenv.config();
@@ -100,6 +100,11 @@ const getRoom = (roomId: string): GameEngine => {
     return engine;
 };
 
+// Look up an existing room without creating one — used for action events
+const findRoom = (roomId: string): GameEngine | undefined => {
+    return rooms.get(roomId);
+};
+
 // --- Inactivity Cleanup ---
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
@@ -110,21 +115,23 @@ setInterval(() => {
         if (state.currentPhase === 'END_GAME' && now - state.lastActivityAt > 5 * 60 * 1000) {
             console.log(`🧹 Purging finished game room: ${roomId}`);
             io.to(roomId).emit('TICKER_LOG', 'Game results expired. Room closed.');
+            engine.cleanup();
             io.in(roomId).disconnectSockets(true);
             rooms.delete(roomId);
         } else if (now - state.lastActivityAt > INACTIVITY_TIMEOUT) {
             console.log(`🧹 Purging inactive room: ${roomId}`);
             io.to(roomId).emit('TICKER_LOG', 'Room closed due to 30 minutes of inactivity.');
+            engine.cleanup();
             io.in(roomId).disconnectSockets(true);
             rooms.delete(roomId);
         }
     }
 }, 5 * 60 * 1000); // Run check every 5 minutes
 
-// Basic Socket.io Middleware for Authentication & Handshake Validation
+// Placeholder Socket.io auth middleware — accepts any non-empty token.
+// TODO: Replace with JWT or session-based auth if player identity verification is needed.
 io.use((socket, next) => {
     const token = socket.handshake.auth?.token;
-    // For now, we just require a token to exist (could be expanded to JWT)
     if (!token) {
         return next(new Error('Authentication failed: Missing token'));
     }
@@ -167,6 +174,11 @@ io.on('connection', (socket: Socket) => {
         const engine = getRoom(roomId);
         const player = engine.joinPlayer(socket.id, name, avatar || '');
 
+        if (!player) {
+            // Join was rejected (room full or game in progress)
+            return socket.emit('ERROR', { message: 'Cannot join: room is full or game is already in progress.' });
+        }
+
         // Confirm join to client and send initial state
         socket.emit('PLAYER_JOINED', player);
         socket.emit('STATE_SYNC', engine.getState());
@@ -177,7 +189,7 @@ io.on('connection', (socket: Socket) => {
     socket.on('START_GAME', () => {
         const roomId = socketToRoom.get(socket.id);
         if (roomId) {
-            getRoom(roomId).startGame(socket.id);
+            findRoom(roomId)?.startGame(socket.id);
         }
     });
 
@@ -193,14 +205,14 @@ io.on('connection', (socket: Socket) => {
             const settings = Object.fromEntries(
                 Object.entries(result.data).filter(([_, v]) => v !== undefined)
             );
-            getRoom(roomId).updateSettings(socket.id, settings);
+            findRoom(roomId)?.updateSettings(socket.id, settings);
         }
     });
 
     socket.on('ROLL_DICE', () => {
         const roomId = socketToRoom.get(socket.id);
         if (roomId) {
-            getRoom(roomId).rollDice(socket.id);
+            findRoom(roomId)?.rollDice(socket.id);
         }
     });
 
@@ -213,21 +225,21 @@ io.on('connection', (socket: Socket) => {
         const { type, stock, amount } = result.data;
         const roomId = socketToRoom.get(socket.id);
         if (roomId) {
-            getRoom(roomId).executeTrade(socket.id, type, stock, amount);
+            findRoom(roomId)?.executeTrade(socket.id, type, stock, amount);
         }
     });
 
     socket.on('REQUEST_LOAN', () => {
         const roomId = socketToRoom.get(socket.id);
         if (roomId) {
-            getRoom(roomId).requestLoan(socket.id);
+            findRoom(roomId)?.requestLoan(socket.id);
         }
     });
 
     socket.on('FORFEIT_GAME', () => {
         const roomId = socketToRoom.get(socket.id);
         if (roomId) {
-            getRoom(roomId).forfeitGame(socket.id);
+            findRoom(roomId)?.forfeitGame(socket.id);
             socket.emit('PLAYER_FORFEITED');
             socket.leave(roomId);
             socketToRoom.delete(socket.id);
@@ -239,7 +251,7 @@ io.on('connection', (socket: Socket) => {
         if (typeof ready !== 'boolean') return;
         const roomId = socketToRoom.get(socket.id);
         if (roomId) {
-            getRoom(roomId).setPlayerReady(socket.id, ready);
+            findRoom(roomId)?.setPlayerReady(socket.id, ready);
         }
     });
 
@@ -248,7 +260,7 @@ io.on('connection', (socket: Socket) => {
         lastAction.delete(socket.id);
         const roomId = socketToRoom.get(socket.id);
         if (roomId) {
-            getRoom(roomId).disconnectPlayer(socket.id);
+            findRoom(roomId)?.disconnectPlayer(socket.id);
             socketToRoom.delete(socket.id);
         }
     });
@@ -279,4 +291,14 @@ setInterval(async () => {
 
 server.listen(PORT, () => {
     console.log(`🚀 Stock Ticker WebSocket Server running on port ${PORT}`);
+});
+
+// --- Process-level Error Handlers ---
+// Prevent silent crashes by logging unhandled errors
+process.on('uncaughtException', (err) => {
+    console.error('💥 Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
 });

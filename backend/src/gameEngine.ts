@@ -5,6 +5,7 @@ const INITIAL_STOCK_PRICE = 1.00;
 const DEFAULT_INITIAL_CASH = 5000.00;
 const DEFAULT_MAX_ROUNDS = 20;
 const LOAN_AMOUNT = 1000.00;
+export const MAX_PLAYERS = 6;
 
 const createInitialMarket = (): MarketState => {
     const stocks: StockSymbol[] = ['Gold', 'Silver', 'Oil', 'Industrial', 'Bonds', 'Grain'];
@@ -23,6 +24,9 @@ const createInitialMarket = (): MarketState => {
 export class GameEngine {
     private state: GameState;
     private timer: any = null;
+    private pendingRollTimeout: any = null;
+    private pendingEventTimeout: any = null;
+    private isRolling: boolean = false;
 
     // Callback when state changes significantly so the server can broadcast
     public onStateSync?: (state: GameState, eventName?: string, payload?: any) => void;
@@ -74,13 +78,25 @@ export class GameEngine {
         if (this.onTickerLog) this.onTickerLog(msg);
     }
 
-    public joinPlayer(socketId: string, name: string, avatar: string): Player {
+    public joinPlayer(socketId: string, name: string, avatar: string): Player | null {
         if (this.state.players[socketId]) {
+            // Allow reconnection of existing player
             this.state.players[socketId].connectionStatus = 'ONLINE';
             this.state.players[socketId].name = name;
             this.state.players[socketId].avatar = avatar;
             this.addLog(`${name} reconnected.`);
         } else {
+            // Block new joins during active gameplay
+            const activePhases: Phase[] = ['INITIAL_BUY_IN', 'ROLLING', 'RESOLVING_ROLL', 'PAYING_DIVIDENDS', 'STOCK_EVENT_PHASE', 'OPEN_MARKET', 'END_GAME'];
+            if (activePhases.includes(this.state.currentPhase)) {
+                return null;
+            }
+
+            // Enforce max player limit
+            if (Object.keys(this.state.players).length >= MAX_PLAYERS) {
+                return null;
+            }
+
             const newPlayer: Player = {
                 id: socketId,
                 name,
@@ -128,7 +144,7 @@ export class GameEngine {
 
         // If no players remain, reset to lobby
         if (remainingCount === 0) {
-            this.stopTimer();
+            this.cleanup();
             this.state.currentPhase = 'LOBBY';
             this.state.completedRounds = 0;
             this.state.currentPlayerIndex = 0;
@@ -168,6 +184,9 @@ export class GameEngine {
 
     public startGame(socketId: string) {
         if (this.state.currentPhase !== 'LOBBY' && this.state.currentPhase !== 'END_GAME') return;
+
+        // Clear any zombie timers from a previous game
+        this.cleanup();
 
         // Only the host (first player) can start the game
         const playerIds = Object.keys(this.state.players);
@@ -235,10 +254,20 @@ export class GameEngine {
             this.stopTimer();
         }
 
+        // On END_GAME, clean up all pending timeouts to prevent zombies
+        if (phase === 'END_GAME') {
+            this.cleanup();
+        }
+
         // Reset all ready states when entering a new phase
         Object.values(this.state.players).forEach(p => p.isReady = false);
 
         this.syncState('PHASE_CHANGED', phase);
+
+        // Auto-skip disconnected players when entering ROLLING phase
+        if (phase === 'ROLLING') {
+            this.skipDisconnectedPlayer();
+        }
     }
 
     private startTimer() {
@@ -261,6 +290,37 @@ export class GameEngine {
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = null;
+        }
+    }
+
+    // Clear ALL timers and pending timeouts to prevent zombie callbacks
+    public cleanup() {
+        this.stopTimer();
+        if (this.pendingRollTimeout) {
+            clearTimeout(this.pendingRollTimeout);
+            this.pendingRollTimeout = null;
+        }
+        if (this.pendingEventTimeout) {
+            clearTimeout(this.pendingEventTimeout);
+            this.pendingEventTimeout = null;
+        }
+    }
+
+    // Auto-skip disconnected players to prevent the game from stalling
+    private skipDisconnectedPlayer() {
+        const activePlayers = Object.values(this.state.players);
+        if (activePlayers.length === 0) return;
+
+        const currentPlayer = activePlayers[this.state.currentPlayerIndex % activePlayers.length];
+        if (currentPlayer && currentPlayer.connectionStatus === 'DISCONNECTED') {
+            this.addLog(`${currentPlayer.name} is disconnected. Skipping their turn.`);
+            // Use a short delay so the log is visible to clients
+            setTimeout(() => {
+                // Re-check: guard against state changes during the delay
+                if (this.state.currentPhase === 'ROLLING') {
+                    this.advanceTurn();
+                }
+            }, 1500);
         }
     }
 
@@ -292,6 +352,7 @@ export class GameEngine {
 
     public rollDice(socketId: string) {
         if (this.state.currentPhase !== 'ROLLING') return;
+        if (this.isRolling) return; // Prevent double-roll race condition
 
         // Determine current player
         const activePlayers = Object.values(this.state.players);
@@ -300,9 +361,10 @@ export class GameEngine {
         if (currentPlayer && currentPlayer.id !== socketId) {
             // It's not this player's turn 
             console.warn(`Unauthorized ROLL_DICE attempt by ${socketId}. Expected ${currentPlayer.id}`);
-            return; 
+            return;
         }
 
+        this.isRolling = true;
         this.setPhase('RESOLVING_ROLL');
 
         // Cryptographically secure dice roll based on dice.js
@@ -340,18 +402,29 @@ export class GameEngine {
         }
 
         // Give clients 5.5 seconds to animate the roll and digest the result before processing
-        setTimeout(() => {
+        this.pendingRollTimeout = setTimeout(() => {
+            this.pendingRollTimeout = null;
             this.processRollResult(stockRolled, directionFace, amountValue);
         }, 5500);
     }
 
     private processRollResult(stock: StockSymbol, action: string, amount: number) {
+        // Phase guard: bail if the game state changed during the 5.5s animation delay
+        if (this.state.currentPhase !== 'RESOLVING_ROLL') {
+            console.warn(`processRollResult skipped: phase is ${this.state.currentPhase}, expected RESOLVING_ROLL`);
+            this.isRolling = false;
+            return;
+        }
+
         if (action === 'UP' || action === 'DOWN') {
             let currentVal = this.state.market[stock].currentValue;
             currentVal = action === 'UP' ? currentVal + amount : currentVal - amount;
 
             // Fix precision issues
             currentVal = Math.round(currentVal * 100) / 100;
+
+            // Clamp to zero — prevent negative values
+            currentVal = Math.max(0, currentVal);
 
             this.state.market[stock].currentValue = currentVal;
             this.state.market[stock].history.push(currentVal);
@@ -374,7 +447,10 @@ export class GameEngine {
 
             if (this.state.market[stock].status !== 'NORMAL') {
                 this.setPhase('STOCK_EVENT_PHASE');
-                setTimeout(() => this.processStockEvents(), 2000);
+                this.pendingEventTimeout = setTimeout(() => {
+                    this.pendingEventTimeout = null;
+                    this.processStockEvents();
+                }, 2000);
                 return;
             }
 
@@ -400,6 +476,13 @@ export class GameEngine {
     }
 
     private processStockEvents() {
+        // Phase guard: bail if the game state changed during the 2s delay
+        if (this.state.currentPhase !== 'STOCK_EVENT_PHASE') {
+            console.warn(`processStockEvents skipped: phase is ${this.state.currentPhase}, expected STOCK_EVENT_PHASE`);
+            this.isRolling = false;
+            return;
+        }
+
         // Process Bankruptcies and Splits
         for (const stock of Object.keys(this.state.market) as StockSymbol[]) {
             const data = this.state.market[stock];
@@ -430,6 +513,9 @@ export class GameEngine {
     }
 
     private advanceTurn() {
+        // Release the rolling lock
+        this.isRolling = false;
+
         // Increment the current player index for the next roll
         this.state.currentPlayerIndex += 1;
 
@@ -519,6 +605,9 @@ export class GameEngine {
     public requestLoan(socketId: string) {
         const player = this.state.players[socketId];
         if (!player || player.hasUsedLoan) return;
+
+        // Check if loans are enabled in settings
+        if (!this.state.settings.enableLoans) return;
 
         // Player is bankrupt if they have no cash AND no stocks of value they can sell
         const hasSellableStocks = Object.entries(player.portfolio).some(([sym, qty]) => {

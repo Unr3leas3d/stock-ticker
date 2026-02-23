@@ -17,10 +17,9 @@ interface PlayerData {
 interface PlayerLedgerCardProps {
     player: PlayerData
     market?: Record<string, { currentValue: number }>
-    onRequestLoan?: () => void
 }
 
-export function PlayerLedgerCard({ player, market, onRequestLoan }: PlayerLedgerCardProps) {
+export function PlayerLedgerCard({ player, market }: PlayerLedgerCardProps) {
     const loanDisabled = player.hasUsedLoan || player.isReady;
     return (
         <Card className="flex flex-col min-h-[50vh]">
@@ -31,7 +30,7 @@ export function PlayerLedgerCard({ player, market, onRequestLoan }: PlayerLedger
                         <CardDescription className="text-[10px] uppercase font-bold tracking-wider">{player.isSelf ? "Your Ledger" : "Player Ledger"}</CardDescription>
                     </div>
                     {player.hasUsedLoan && (
-                        <div className="bg-amber-100 text-amber-700 text-[9px] font-black px-1.5 py-0.5 rounded border border-amber-200 uppercase tracking-tighter shadow-sm">
+                        <div className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[9px] font-black px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800 uppercase tracking-tighter shadow-sm">
                             Loan Taken
                         </div>
                     )}

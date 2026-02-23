@@ -59,6 +59,7 @@ export interface GameState {
     tickerLog: string[]; // Keep last N messages
     lastRoll?: RollResult;
     settings: GameSettings;
+    lastActivityAt?: number;
 }
 
 export type TradeType = 'BUY' | 'SELL';
