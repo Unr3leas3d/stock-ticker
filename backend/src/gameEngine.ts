@@ -108,8 +108,15 @@ export class GameEngine {
         }
     }
 
-    public startGame() {
+    public startGame(socketId: string) {
         if (this.state.currentPhase !== 'LOBBY' && this.state.currentPhase !== 'END_GAME') return;
+
+        // Only the host (first player) can start the game
+        const playerIds = Object.keys(this.state.players);
+        if (playerIds.length > 0 && playerIds[0] !== socketId) {
+            console.warn(`Unauthorized START_GAME attempt by ${socketId}`);
+            return;
+        }
 
         // Apply any final settings-based adjustments
         this.state.roundLength = this.state.settings.maxRounds;
@@ -143,8 +150,16 @@ export class GameEngine {
         this.addLog('Game Started! Initial Buy-in Phase.');
     }
 
-    public updateSettings(settings: Partial<GameSettings>) {
+    public updateSettings(socketId: string, settings: Partial<GameSettings>) {
         if (this.state.currentPhase !== 'LOBBY') return;
+
+        // Only the host (first player) can update settings
+        const playerIds = Object.keys(this.state.players);
+        if (playerIds.length > 0 && playerIds[0] !== socketId) {
+            console.warn(`Unauthorized UPDATE_SETTINGS attempt by ${socketId}`);
+            return;
+        }
+
         this.state.settings = { ...this.state.settings, ...settings };
         this.state.roundLength = this.state.settings.maxRounds;
         this.state.tradingInterval = this.state.settings.tradingInterval;
@@ -226,7 +241,8 @@ export class GameEngine {
 
         if (currentPlayer && currentPlayer.id !== socketId) {
             // It's not this player's turn 
-            // return; 
+            console.warn(`Unauthorized ROLL_DICE attempt by ${socketId}. Expected ${currentPlayer.id}`);
+            return; 
         }
 
         this.setPhase('RESOLVING_ROLL');

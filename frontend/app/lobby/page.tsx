@@ -25,7 +25,12 @@ export default function LobbyPage() {
     }, [gameState?.currentPhase, router])
 
     const generateRoomId = () => {
-        return Math.random().toString(36).substring(2, 6).toUpperCase()
+        const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        const array = new Uint8Array(4);
+        window.crypto.getRandomValues(array);
+        return Array.from(array)
+            .map((b) => charset[b % charset.length])
+            .join("");
     }
 
     const handleJoin = () => {
@@ -80,6 +85,7 @@ export default function LobbyPage() {
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         disabled={!isConnected}
+                                        maxLength={20}
                                     />
                                 </div>
 

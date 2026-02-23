@@ -37,8 +37,16 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         // Initialize socket connection as a singleton
         if (!socket) {
+            // Secure token generation for this session
+            const sessionToken = Math.random().toString(36).substring(2) + Date.now().toString(36);
+
             socket = io(SOCKET_URL, {
                 reconnectionDelayMax: 10000,
+                transports: ['polling', 'websocket'], // Start with polling, upgrade to websocket
+                withCredentials: true,
+                auth: {
+                    token: sessionToken
+                }
             });
         }
 
@@ -96,6 +104,30 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
             }
         };
     }, []);
+
+    // --- Keep-Alive Ping for Render ---
+    // Only pings when the game is active (not in LOBBY) to avoid unnecessary server uptime.
+    useEffect(() => {
+        if (!gameState || gameState.currentPhase === 'LOBBY' || !isConnected) return;
+
+        console.log("Keep-alive ping interval started");
+
+        const pingInterval = setInterval(async () => {
+            try {
+                const response = await fetch(`${SOCKET_URL}/health`);
+                if (response.ok) {
+                    console.log("Keep-alive ping successful");
+                }
+            } catch (err) {
+                console.warn("Keep-alive ping failed:", err);
+            }
+        }, 10 * 60 * 1000); // 10 minutes
+
+        return () => {
+            console.log("Keep-alive ping interval cleared");
+            clearInterval(pingInterval);
+        };
+    }, [gameState?.currentPhase, isConnected]);
 
     // Action Methods
     const joinRoom = useCallback((roomId: string, name: string) => {

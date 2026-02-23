@@ -3,30 +3,76 @@ import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { z } from 'zod';
 import { GameEngine } from './gameEngine.js';
-import type { Player, TradeType, StockSymbol } from './types.js';
+import type { TradeType, StockSymbol } from './types.js';
 
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// Hardened CORS: Support comma-separated list of origins from environment or default
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || 'http://localhost:3000')
+    .split(',')
+    .map(o => o.trim().replace(/\/$/, '')); // Trim whitespace and trailing slashes
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        if (ALLOWED_ORIGINS.includes(origin)) {
+            callback(null, true);
+        } else {
+            console.warn(`Blocked by CORS: origin ${origin} not in [${ALLOWED_ORIGINS.join(', ')}]`);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST'],
+    credentials: true
+}));
 
 const server = createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: '*',
-        methods: ['GET', 'POST']
-    }
+        origin: ALLOWED_ORIGINS,
+        methods: ['GET', 'POST'],
+        credentials: true
+    },
+    transports: ['polling', 'websocket'] // Explicitly allow polling -> websocket upgrade
 });
 
 const PORT = process.env.PORT || 3001;
+
+// --- Zod Schemas for Input Validation ---
+const JoinRoomSchema = z.object({
+    roomId: z.string().min(1).max(10).toUpperCase(),
+    name: z.string().min(1).max(20).trim(),
+    avatar: z.string().max(100).optional()
+});
+
+const TradeSchema = z.object({
+    type: z.enum(['BUY', 'SELL']),
+    stock: z.enum(['Gold', 'Silver', 'Oil', 'Industrial', 'Bonds', 'Grain']),
+    amount: z.number().int().positive().max(10000)
+});
+
+const SettingsSchema = z.object({
+    initialCash: z.number().min(100).max(100000).optional(),
+    maxRounds: z.number().min(1).max(100).optional(),
+    tradingInterval: z.number().min(1).max(20).optional(),
+    enableLoans: z.boolean().optional()
+});
 
 // Multi-room storage
 const rooms = new Map<string, GameEngine>();
 
 // Store which room each socket belongs to for easy lookup
 const socketToRoom = new Map<string, string>();
+
+// Simple in-memory rate limiting map (socketId -> lastActionTimestamp)
+const lastAction = new Map<string, number>();
+const RATE_LIMIT_MS = 200; // 5 actions per second
 
 const getRoom = (roomId: string): GameEngine => {
     let engine = rooms.get(roomId);
@@ -75,11 +121,29 @@ setInterval(() => {
     }
 }, 5 * 60 * 1000); // Run check every 5 minutes
 
+// Basic Socket.io Middleware for Authentication & Handshake Validation
+io.use((socket, next) => {
+    const token = socket.handshake.auth?.token;
+    // For now, we just require a token to exist (could be expanded to JWT)
+    if (!token) {
+        return next(new Error('Authentication failed: Missing token'));
+    }
+    next();
+});
+
 io.on('connection', (socket: Socket) => {
     console.log(`Client connected: ${socket.id}`);
 
-    // Update room activity on any client event
+    // Update room activity on any client event + Rate Limiting
     socket.use(([event, ...args], next) => {
+        const now = Date.now();
+        const last = lastAction.get(socket.id) || 0;
+
+        if (now - last < RATE_LIMIT_MS && event !== 'disconnect') {
+            return next(new Error('Rate limit exceeded. Slow down!'));
+        }
+        lastAction.set(socket.id, now);
+
         const roomId = socketToRoom.get(socket.id);
         if (roomId) {
             const engine = rooms.get(roomId);
@@ -90,32 +154,46 @@ io.on('connection', (socket: Socket) => {
 
     // --- Client -> Server Event Listeners ---
 
-    socket.on('JOIN_ROOM', ({ roomId, name, avatar }) => {
-        const id = roomId || 'GLOBAL_ROOM';
-        socket.join(id);
-        socketToRoom.set(socket.id, id);
+    socket.on('JOIN_ROOM', (data) => {
+        const result = JoinRoomSchema.safeParse(data);
+        if (!result.success) {
+            return socket.emit('ERROR', { message: 'Invalid join data: ' + result.error.issues[0]?.message });
+        }
 
-        const engine = getRoom(id);
-        const player = engine.joinPlayer(socket.id, name || 'Anonymous Player', avatar || '');
+        const { roomId, name, avatar } = result.data;
+        socket.join(roomId);
+        socketToRoom.set(socket.id, roomId);
+
+        const engine = getRoom(roomId);
+        const player = engine.joinPlayer(socket.id, name, avatar || '');
 
         // Confirm join to client and send initial state
         socket.emit('PLAYER_JOINED', player);
         socket.emit('STATE_SYNC', engine.getState());
 
-        console.log(`Player ${name} joined room: ${id}`);
+        console.log(`Player ${name} joined room: ${roomId}`);
     });
 
     socket.on('START_GAME', () => {
         const roomId = socketToRoom.get(socket.id);
         if (roomId) {
-            getRoom(roomId).startGame();
+            getRoom(roomId).startGame(socket.id);
         }
     });
 
-    socket.on('UPDATE_SETTINGS', (settings) => {
+    socket.on('UPDATE_SETTINGS', (data) => {
+        const result = SettingsSchema.safeParse(data);
+        if (!result.success) {
+            return socket.emit('ERROR', { message: 'Invalid settings: ' + result.error.issues[0]?.message });
+        }
+
         const roomId = socketToRoom.get(socket.id);
         if (roomId) {
-            getRoom(roomId).updateSettings(settings);
+            // Filter out undefined values to satisfy exactOptionalPropertyTypes: true
+            const settings = Object.fromEntries(
+                Object.entries(result.data).filter(([_, v]) => v !== undefined)
+            );
+            getRoom(roomId).updateSettings(socket.id, settings);
         }
     });
 
@@ -126,7 +204,13 @@ io.on('connection', (socket: Socket) => {
         }
     });
 
-    socket.on('EXECUTE_TRADE', ({ type, stock, amount }: { type: TradeType, stock: StockSymbol, amount: number }) => {
+    socket.on('EXECUTE_TRADE', (data) => {
+        const result = TradeSchema.safeParse(data);
+        if (!result.success) {
+            return socket.emit('ERROR', { message: 'Invalid trade: ' + result.error.issues[0]?.message });
+        }
+
+        const { type, stock, amount } = result.data;
         const roomId = socketToRoom.get(socket.id);
         if (roomId) {
             getRoom(roomId).executeTrade(socket.id, type, stock, amount);
@@ -140,7 +224,8 @@ io.on('connection', (socket: Socket) => {
         }
     });
 
-    socket.on('SET_READY', (ready: boolean) => {
+    socket.on('SET_READY', (ready) => {
+        if (typeof ready !== 'boolean') return;
         const roomId = socketToRoom.get(socket.id);
         if (roomId) {
             getRoom(roomId).setPlayerReady(socket.id, ready);
@@ -149,6 +234,7 @@ io.on('connection', (socket: Socket) => {
 
     socket.on('disconnect', () => {
         console.log(`Client disconnected: ${socket.id}`);
+        lastAction.delete(socket.id);
         const roomId = socketToRoom.get(socket.id);
         if (roomId) {
             getRoom(roomId).disconnectPlayer(socket.id);
@@ -164,6 +250,21 @@ app.get('/health', (req, res) => {
         totalPlayers: socketToRoom.size
     });
 });
+
+// --- Keep-Alive Self-Ping for Render ---
+// This ensures that as long as there is at least one active room, 
+// the server tries to stay awake by pinging its own health endpoint.
+setInterval(async () => {
+    if (rooms.size > 0) {
+        const url = `http://localhost:${PORT}/health`;
+        try {
+            await fetch(url);
+            console.log(`Self-ping to ${url} successful (Active rooms: ${rooms.size})`);
+        } catch (err) {
+            console.warn(`Self-ping to ${url} failed:`, err);
+        }
+    }
+}, 10 * 60 * 1000); // 10 minutes
 
 server.listen(PORT, () => {
     console.log(`🚀 Stock Ticker WebSocket Server running on port ${PORT}`);

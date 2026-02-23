@@ -52,7 +52,7 @@ export function RulesModal() {
                                     <h3 className="font-bold text-lg uppercase tracking-tight">The Objective</h3>
                                 </div>
                                 <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-                                    The goal of Stock Ticker is to accumulate the highest **Net Worth** by the end of the game. Your Net Worth is the sum of your **Cash** and the current market value of your **Stock Portfolio** (minus any outstanding debts).
+                                    The goal of Stock Ticker is to accumulate the highest <strong className="text-foreground">Net Worth</strong> by the end of the game. Your Net Worth is the sum of your <strong className="text-foreground">Cash</strong> and the current market value of your <strong className="text-foreground">Stock Portfolio</strong> (minus any outstanding debts).
                                 </p>
                             </section>
 
@@ -73,7 +73,7 @@ export function RulesModal() {
                                     </div>
                                     <div className="p-4 rounded-xl border bg-slate-50 dark:bg-slate-800/50 space-y-2">
                                         <Badge className="bg-blue-500 hover:bg-blue-600">DIVIDEND</Badge>
-                                        <p className="text-xs font-semibold">Pays cash to all owners. Only values **&gt; $1.00** pay out.</p>
+                                        <p className="text-xs font-semibold">Pays cash to all owners. Only values <strong className="text-foreground">&gt; $1.00</strong> pay out.</p>
                                     </div>
                                 </div>
                             </section>
@@ -91,7 +91,7 @@ export function RulesModal() {
                                         </div>
                                         <div>
                                             <h4 className="font-bold text-sm uppercase">Stock Split ($2.00)</h4>
-                                            <p className="text-xs text-muted-foreground mt-1 font-medium leading-relaxed">When a stock hits **$2.00**, it splits! Your share count **doubles**, and the price resets to **$1.00**. This is how you grow big portfolios quickly.</p>
+                                            <p className="text-xs text-muted-foreground mt-1 font-medium leading-relaxed">When a stock hits <strong className="text-foreground">$2.00</strong>, it splits! Your share count <strong className="text-foreground">doubles</strong>, and the price resets to <strong className="text-foreground">$1.00</strong>. This is how you grow big portfolios quickly.</p>
                                         </div>
                                     </div>
                                     <div className="flex gap-4 items-start p-4 rounded-xl border border-red-200/50 bg-red-50/30 dark:bg-red-900/10 shadow-sm">
@@ -100,7 +100,7 @@ export function RulesModal() {
                                         </div>
                                         <div>
                                             <h4 className="font-bold text-sm uppercase">Bankruptcy ($0.00)</h4>
-                                            <p className="text-xs text-muted-foreground mt-1 font-medium leading-relaxed">If a stock drops to **$0.00**, it goes bankrupt. All shares of that stock are **wiped out** (set to 0), and the price resets to **$1.00**.</p>
+                                            <p className="text-xs text-muted-foreground mt-1 font-medium leading-relaxed">If a stock drops to <strong className="text-foreground">$0.00</strong>, it goes bankrupt. All shares of that stock are <strong className="text-foreground">wiped out</strong> (set to 0), and the price resets to <strong className="text-foreground">$1.00</strong>.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -123,7 +123,7 @@ export function RulesModal() {
                                         <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                                             <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                                         </div>
-                                        <p className="text-sm text-muted-foreground"><strong className="text-foreground">Emergency Loan:</strong> If you are completely bankrupt ($0 cash and no sellable assets), you can request a one-time **$1,000 loan**. Note that **$1,500** ($1,000 principal + $500 interest) will be deducted from your final Net Worth.</p>
+                                        <p className="text-sm text-muted-foreground"><strong className="text-foreground">Emergency Loan:</strong> If you are completely bankrupt ($0 cash and no sellable assets), you can request a one-time <strong className="text-foreground">$1,000 loan</strong>. Note that <strong className="text-foreground">$1,500</strong> ($1,000 principal + $500 interest) will be deducted from your final Net Worth.</p>
                                     </li>
                                 </ul>
                             </section>
