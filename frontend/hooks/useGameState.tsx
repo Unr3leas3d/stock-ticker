@@ -21,6 +21,7 @@ interface GameStateContextValue {
         startGame: () => void;
         requestLoan: () => void;
         updateSettings: (settings: Partial<GameSettings>) => void;
+        forfeitGame: () => void;
     };
 }
 
@@ -84,6 +85,12 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
             alert(payload.message)
         };
 
+        const handlePlayerForfeited = () => {
+            console.log("You have forfeited the game.");
+            setGameState(null);
+            setCurrentRoomId(null);
+        };
+
         // Attach listeners
         socket.on('connect', handleConnect);
         socket.on('disconnect', handleDisconnect);
@@ -91,6 +98,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
         socket.on('MARKET_UPDATED', handleMarketUpdated);
         socket.on('TICKER_LOG', handleTickerLog);
         socket.on('ERROR', handleError);
+        socket.on('PLAYER_FORFEITED', handlePlayerForfeited);
 
         // Cleanup on unmount
         return () => {
@@ -101,6 +109,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
                 socket.off('MARKET_UPDATED', handleMarketUpdated);
                 socket.off('TICKER_LOG', handleTickerLog);
                 socket.off('ERROR', handleError);
+                socket.off('PLAYER_FORFEITED', handlePlayerForfeited);
             }
         };
     }, []);
@@ -173,6 +182,12 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [isConnected]);
 
+    const forfeitGame = useCallback(() => {
+        if (socket && isConnected) {
+            socket.emit('FORFEIT_GAME');
+        }
+    }, [isConnected]);
+
     // Derive the specific player data from the global state
     const selfPlayer = gameState && gameState.players && playerId ? gameState.players[playerId] : null;
 
@@ -189,7 +204,8 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
             rollDice,
             startGame,
             requestLoan,
-            updateSettings
+            updateSettings,
+            forfeitGame
         }
     };
 

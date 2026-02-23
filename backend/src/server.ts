@@ -224,6 +224,17 @@ io.on('connection', (socket: Socket) => {
         }
     });
 
+    socket.on('FORFEIT_GAME', () => {
+        const roomId = socketToRoom.get(socket.id);
+        if (roomId) {
+            getRoom(roomId).forfeitGame(socket.id);
+            socket.emit('PLAYER_FORFEITED');
+            socket.leave(roomId);
+            socketToRoom.delete(socket.id);
+            console.log(`Player ${socket.id} forfeited from room: ${roomId}`);
+        }
+    });
+
     socket.on('SET_READY', (ready) => {
         if (typeof ready !== 'boolean') return;
         const roomId = socketToRoom.get(socket.id);

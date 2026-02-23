@@ -108,6 +108,64 @@ export class GameEngine {
         }
     }
 
+    public forfeitGame(socketId: string) {
+        const player = this.state.players[socketId];
+        if (!player) return;
+
+        // Only allow forfeiting during active gameplay phases
+        const activePhases = ['INITIAL_BUY_IN', 'ROLLING', 'RESOLVING_ROLL', 'PAYING_DIVIDENDS', 'STOCK_EVENT_PHASE', 'OPEN_MARKET'];
+        if (!activePhases.includes(this.state.currentPhase)) return;
+
+        const playerName = player.name;
+        const playerKeys = Object.keys(this.state.players);
+        const playerIndex = playerKeys.indexOf(socketId);
+
+        // Remove the player
+        delete this.state.players[socketId];
+        this.addLog(`${playerName} has forfeited the game.`);
+
+        const remainingCount = Object.keys(this.state.players).length;
+
+        // If no players remain, reset to lobby
+        if (remainingCount === 0) {
+            this.stopTimer();
+            this.state.currentPhase = 'LOBBY';
+            this.state.completedRounds = 0;
+            this.state.currentPlayerIndex = 0;
+            this.addLog('All players left. Game reset.');
+            this.syncState();
+            return;
+        }
+
+        // If the forfeiting player was the current roller during ROLLING phase,
+        // adjust the index so the game doesn't get stuck
+        if (this.state.currentPhase === 'ROLLING' && playerIndex === this.state.currentPlayerIndex) {
+            // The player was removed, so the next player slides into this index.
+            // If the removed player was the last in the list, wrap around.
+            if (this.state.currentPlayerIndex >= remainingCount) {
+                this.state.currentPlayerIndex = 0;
+                // A full round just completed
+                this.state.completedRounds += 1;
+                if (this.state.completedRounds >= this.state.roundLength) {
+                    this.setPhase('END_GAME');
+                    this.addLog('Game Over!');
+                    this.syncState();
+                    return;
+                }
+            }
+        } else if (playerIndex < this.state.currentPlayerIndex) {
+            // Player was before the current roller in the list, shift index back
+            this.state.currentPlayerIndex = Math.max(0, this.state.currentPlayerIndex - 1);
+        }
+
+        // Ensure index is still valid
+        if (this.state.currentPlayerIndex >= remainingCount) {
+            this.state.currentPlayerIndex = 0;
+        }
+
+        this.syncState();
+    }
+
     public startGame(socketId: string) {
         if (this.state.currentPhase !== 'LOBBY' && this.state.currentPhase !== 'END_GAME') return;
 

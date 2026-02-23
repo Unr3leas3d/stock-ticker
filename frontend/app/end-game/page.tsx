@@ -21,7 +21,7 @@ export default function EndGamePage() {
 
     if (!gameState) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="min-h-screen flex items-center justify-center bg-background">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         )
@@ -52,7 +52,7 @@ export default function EndGamePage() {
     const winner = finalPlayers[0]
 
     return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center p-4 py-12">
+        <div className="min-h-screen bg-background flex flex-col items-center p-4 py-12">
             <div className="w-full max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 my-auto">
                 {/* Winner Header */}
                 <div className="text-center space-y-4">
@@ -60,8 +60,8 @@ export default function EndGamePage() {
                         <div className="absolute inset-0 bg-yellow-400/20 blur-xl rounded-full animate-pulse" />
                         <Crown className="h-12 w-12 text-yellow-600 relative z-10" />
                     </div>
-                    <h1 className="text-5xl font-black tracking-tight text-slate-900 uppercase">Game Over</h1>
-                    <p className="text-xl text-slate-500 font-medium tracking-wide">
+                    <h1 className="text-5xl font-black tracking-tight text-foreground uppercase">Game Over</h1>
+                    <p className="text-xl text-muted-foreground font-medium tracking-wide">
                         <span className="text-primary font-bold">{winner?.name}</span> dominates the market!
                     </p>
                 </div>

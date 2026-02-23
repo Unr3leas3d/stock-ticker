@@ -29,7 +29,7 @@ export default function Home() {
 
   if (!gameState || !selfPlayer || gameState.currentPhase === 'LOBBY') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )

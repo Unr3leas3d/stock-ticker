@@ -8,12 +8,23 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
-import { Trophy, Coins, Dice5, History, Briefcase, HandCoins, Loader2, TrendingUp, TrendingDown } from "lucide-react"
+import { Trophy, Coins, Dice5, History, Briefcase, HandCoins, Loader2, TrendingUp, TrendingDown, Flag } from "lucide-react"
 import { GlobalLeaderboard } from "@/components/game/GlobalLeaderboard"
 import { PlayerLedgerCard } from "@/components/game/PlayerLedgerCard"
 import { DiceAnimation } from "./DiceAnimation"
 import { useGameState } from "@/hooks/useGameState"
 import { StockSymbol, TradeType } from "@/types/game"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export function ActionCenter() {
     const { gameState, selfPlayer, actions, playerId, currentRoomId } = useGameState()
@@ -129,6 +140,35 @@ export function ActionCenter() {
                                     <p className="text-xs opacity-80 uppercase tracking-tighter">Market Timer</p>
                                 </div>
                             )}
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-primary-foreground/60 hover:text-white hover:bg-red-500/30 border border-transparent hover:border-red-400/50 h-8 px-2.5 gap-1.5"
+                                    >
+                                        <Flag className="h-3.5 w-3.5" />
+                                        <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:inline">Forfeit</span>
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Forfeit Game?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Are you sure you want to forfeit? You'll be permanently removed from this game and returned to the lobby. This action cannot be undone.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Keep Playing</AlertDialogCancel>
+                                        <AlertDialogAction
+                                            variant="destructive"
+                                            onClick={() => actions.forfeitGame()}
+                                        >
+                                            Forfeit Game
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </div>
                     </CardHeader>
                     {currentPhase === 'OPEN_MARKET' && (
